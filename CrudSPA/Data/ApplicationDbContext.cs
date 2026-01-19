@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CrudSPA.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace CrudSPA.Data
 {
@@ -7,11 +8,12 @@ namespace CrudSPA.Data
     public class ApplicationDbContext : DbContext
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            :  base(options)
+            : base(options)
         {
 
         }
 
-        // DB Sets ...
+        // DB Sets to work with the Controller ...
+        public DbSet<Contact> Contacts { get; set; }
     }
 }
