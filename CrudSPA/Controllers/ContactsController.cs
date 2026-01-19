@@ -5,149 +5,122 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CrudSPA.Controllers
 {
-    public class ContactsController : Controller
+    // CHANGE 1: Define this as an API controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ContactsController : ControllerBase // CHANGE 2: Inherit from ControllerBase (lighter than Controller)
     {
         private readonly ApplicationDbContext _context;
+
         public ContactsController(ApplicationDbContext context)
         {
             _context = context;
         }
 
         // ---------------------------------------------------------
-        // LIST (INDEX) & DETAILS
+        // READ (GET)
         // ---------------------------------------------------------
 
-        // GET: Contacts
+        // GET: api/Contacts
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<ActionResult<IEnumerable<Contact>>> GetContacts()
         {
-            // AsNoTracking optimiza la lectura
-            return View(await _context.Contacts.AsNoTracking().ToListAsync());
+            // CHANGE 3: Return the list directly. ASP.NET automatically converts this to JSON.
+            return await _context.Contacts.AsNoTracking().ToListAsync();
         }
 
-        // GET: Contacts/Details/5
-        [HttpGet]
-        public async Task<IActionResult> Details(int? id)
+        // GET: api/Contacts/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Contact>> GetContact(int id)
         {
-            if (id is null) return NotFound();
-
-            var contact = await _context.Contacts
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (contact is null) return NotFound();
-
-            return View(contact);
-        }
-
-        // ---------------------------------------------------------
-        // CREATE
-        // ---------------------------------------------------------
-
-        // GET: Contacts/Create
-        [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: Contacts/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Email,Phone,Address")] Contact contact)
-        {
-            if (ModelState.IsValid)
-            {
-                _context.Add(contact);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(contact);
-        }
-
-        // ---------------------------------------------------------
-        // EDIT
-        // ---------------------------------------------------------
-
-        // GET: Contacts/Edit/5
-        [HttpGet]
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id is null) return NotFound();
-
             var contact = await _context.Contacts.FindAsync(id);
-            if (contact is null) return NotFound();
 
-            return View(contact);
+            if (contact == null)
+            {
+                return NotFound();
+            }
+
+            return contact;
         }
 
-        // POST: Contacts/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Email,Phone,Address")] Contact contact)
-        {
-            if (id != contact.Id) return NotFound();
+        // ---------------------------------------------------------
+        // CREATE (POST)
+        // ---------------------------------------------------------
 
-            if (ModelState.IsValid)
+        // NOTE: We DELETED the 'public IActionResult Create()' GET method.
+        // React handles the UI, so we don't need an endpoint to serve the "Create" form.
+
+        // POST: api/Contacts
+        [HttpPost]
+        public async Task<ActionResult<Contact>> PostContact(Contact contact)
+        {
+            _context.Contacts.Add(contact);
+            await _context.SaveChangesAsync();
+
+            // CHANGE 4: Return 'CreatedAtAction'. This returns a 201 status code
+            // and the location of the new resource.
+            return CreatedAtAction("GetContact", new { id = contact.Id }, contact);
+        }
+
+        // ---------------------------------------------------------
+        // EDIT (PUT)
+        // ---------------------------------------------------------
+
+        // NOTE: We DELETED the 'Edit' GET method. React fetches data via GetContact(id).
+
+        // PUT: api/Contacts/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutContact(int id, Contact contact)
+        {
+            if (id != contact.Id)
             {
-                try
-                {
-                    _context.Update(contact);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    // AWAIT añadido aquí para no bloquear el hilo
-                    if (!await ContactExists(contact.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return BadRequest();
             }
-            return View(contact);
+
+            _context.Entry(contact).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await ContactExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            // CHANGE 5: API standard for updates is usually "NoContent" (204)
+            return NoContent();
         }
 
         // ---------------------------------------------------------
         // DELETE
         // ---------------------------------------------------------
 
-        // GET: Contacts/Delete/5
-        [HttpGet]
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id is null) return NotFound();
+        // NOTE: We DELETED the 'Delete' GET confirmation method. React handles the UI popup.
 
-            var contact = await _context.Contacts
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (contact is null) return NotFound();
-
-            return View(contact);
-        }
-
-        // POST: Contacts/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        // DELETE: api/Contacts/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteContact(int id)
         {
             var contact = await _context.Contacts.FindAsync(id);
-            if (contact != null)
+            if (contact == null)
             {
-                _context.Contacts.Remove(contact);
-                await _context.SaveChangesAsync();
+                return NotFound();
             }
-            return RedirectToAction(nameof(Index));
+
+            _context.Contacts.Remove(contact);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
-        // ---------------------------------------------------------
-        // HELPERS
-        // ---------------------------------------------------------
-
-        // Método convertido a ASYNC para no bloquear la base de datos
         private async Task<bool> ContactExists(int id)
         {
             return await _context.Contacts.AnyAsync(e => e.Id == id);
