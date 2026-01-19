@@ -1,4 +1,14 @@
+using CrudSPA.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// 1.2 Read the connection string   * Inyección de dependecias a la base de datos
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ));
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
