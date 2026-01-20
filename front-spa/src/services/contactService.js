@@ -1,4 +1,5 @@
-const API_URL = "https://localhost:44356//api/contacts"; // Make sure this port matches your .NET project!
+// Antes: "https://localhost:44356//api/contacts"
+const API_URL = "https://localhost:7143/api/contacts";
 
 export const getContacts = async () => {
     const response = await fetch(API_URL);

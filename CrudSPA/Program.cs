@@ -1,51 +1,52 @@
 using CrudSPA.Data;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-// *. Add CORS services
-// 1. Define the Policy
+
+// 1. Configuración de Servicios (Servicios de Contenedor)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:5173") // Your React URL
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // Origen de tu React (Vite)
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
 });
 
-// 1.2 Read the connection string   * Inyección de dependecias a la base de datos
+// Configuración de la Base de Datos
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(
-    builder.Configuration.GetConnectionString("DefaultConnection")
-    ));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// Solo necesitamos controladores para la API
+builder.Services.AddControllers();
+
 var app = builder.Build();
-// 2. Enable the Policy (Must be placed between UseRouting and UseAuthorization)
-app.UseCors("AllowReactApp");
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+// 2. Configuración del Pipeline de solicitudes (Middleware)
+// EL ORDEN ES CRÍTICO AQUÍ:
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-app.UseRouting();
+app.UseStaticFiles();
 
-app.UseAuthorization();
+app.UseRouting(); // 1. Habilita el sistema de rutas
 
-app.MapStaticAssets();
+app.UseCors("AllowReactApp"); // 2. Aplica la política de CORS (Justo después de Routing)
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+app.UseAuthorization(); // 3. Autorización (Después de CORS)
 
+// Mapeo de los controladores de la API
+app.MapControllers();
 
 app.Run();
