@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { getContacts, deleteContact } from "../services/ContactService";
+import { getContacts, deleteContact } from "../services/contactService";
 
 function ContactList() {
     const [contacts, setContacts] = useState([]);

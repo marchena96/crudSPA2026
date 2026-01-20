@@ -1,27 +1,21 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
-import { getContact, createContact, updateContact } from "../services/ContactService";
+// Verifica que el archivo sea 'contactService.js' en minúsculas
+import { getContacts, deleteContact } from "../services/contactService";
 
 function ContactForm() {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    // Estado inicial limpio
     const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        phone: "",
-        address: ""
+        name: "", email: "", phone: "", address: ""
     });
-
     const [loading, setLoading] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false); // Para el botón de guardado
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        if (id) {
-            loadContact();
-        }
+        if (id) loadContact();
     }, [id]);
 
     const loadContact = async () => {
@@ -30,7 +24,6 @@ function ContactForm() {
             const data = await getContact(id);
             setFormData(data);
         } catch (error) {
-            console.error("Error loading contact:", error);
             toast.error("No se pudo cargar el contacto.");
             navigate("/");
         } finally {
@@ -45,122 +38,75 @@ function ContactForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true); // Bloqueamos el botón de guardado
-
+        setIsSubmitting(true);
         try {
             if (id) {
-                // SENIOR TIP: Forzamos que el objeto enviado tenga el ID correcto como número
-                // Esto evita el error 'id != contact.Id' en tu controlador de ASP.NET
                 const dataToUpdate = { ...formData, id: parseInt(id) };
                 await updateContact(id, dataToUpdate);
-                toast.success("¡Contacto actualizado con éxito!");
+                toast.success("¡Contacto actualizado!");
             } else {
                 await createContact(formData);
-                toast.success("¡Contacto creado con éxito!");
+                toast.success("¡Contacto creado!");
             }
             navigate("/");
         } catch (error) {
-            console.error("Error saving contact:", error);
-            // Si el backend envía un error específico (ej. email duplicado), lo mostramos
-            const serverMsg = error.response?.data?.message || "Error al guardar los cambios.";
-            toast.error(serverMsg);
+            toast.error("Error al guardar.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="d-flex justify-content-center mt-5">
-                <div className="spinner-border text-primary" role="status">
-                    <span className="visually-hidden">Cargando datos...</span>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="d-flex justify-content-center align-items-center h-100">
+            <div className="spinner-border text-primary" role="status"></div>
+        </div>
+    );
 
     return (
-        <div className="container mt-4">
-            <div className="card shadow-sm border-0">
-                <div className={`card-header text-white ${id ? "bg-warning" : "bg-success"}`}>
-                    <h4 className="mb-0">
-                        <i className={`bi ${id ? "bi-pencil-square" : "bi-person-plus-fill"} me-2`}></i>
-                        {id ? "Editar Contacto" : "Nuevo Contacto"}
-                    </h4>
+        /* Flexbox para centrar la tarjeta en el espacio de pantalla completa */
+        <div className="d-flex justify-content-center align-items-center h-100">
+            <div className="card shadow-lg border-0 rounded-4 w-100" style={{ maxWidth: '900px' }}>
+                <div className={`card-header p-4 border-0 rounded-top-4 text-white ${id ? "bg-primary" : "bg-success"}`}>
+                    <h3 className="mb-0 fw-bold">
+                        {id ? "Actualizar Información" : "Nuevo Registro"}
+                    </h3>
                 </div>
-                <div className="card-body p-4">
+                <div className="card-body p-4 p-md-5 bg-white rounded-bottom-4">
                     <form onSubmit={handleSubmit}>
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
+                        {/* CSS Grid (Bootstrap Row) para el layout moderno */}
+                        <div className="row g-4">
+                            <div className="col-md-6">
                                 <label className="form-label fw-bold">Nombre Completo</label>
-                                <input
-                                    name="name"
-                                    className="form-control form-control-lg"
-                                    placeholder="Ej: Juan Pérez"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    required
-                                />
+                                <input name="name" className="form-control form-control-lg"
+                                    value={formData.name} onChange={handleChange} required />
                             </div>
-                            <div className="col-md-6 mb-3">
-                                <label className="form-label fw-bold">Correo Electrónico</label>
-                                <input
-                                    name="email"
-                                    type="email"
-                                    className="form-control form-control-lg"
-                                    placeholder="juan@correo.com"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    required
-                                />
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold">Email</label>
+                                <input name="email" type="email" className="form-control form-control-lg"
+                                    value={formData.email} onChange={handleChange} required />
                             </div>
-                        </div>
-
-                        <div className="row">
-                            <div className="col-md-6 mb-3">
+                            <div className="col-md-6">
                                 <label className="form-label fw-bold">Teléfono</label>
-                                <input
-                                    name="phone"
-                                    className="form-control"
-                                    placeholder="+34 600 000 000"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                />
+                                <input name="phone" className="form-control form-control-lg"
+                                    value={formData.phone} onChange={handleChange} />
                             </div>
-                            <div className="col-md-6 mb-3">
+                            <div className="col-md-6">
                                 <label className="form-label fw-bold">Dirección</label>
-                                <input
-                                    name="address"
-                                    className="form-control"
-                                    placeholder="Calle Falsa 123"
-                                    value={formData.address}
-                                    onChange={handleChange}
-                                />
+                                <input name="address" className="form-control form-control-lg"
+                                    value={formData.address} onChange={handleChange} />
                             </div>
                         </div>
 
-                        <div className="d-flex justify-content-end gap-2 mt-4">
-                            <button
-                                type="button"
-                                onClick={() => navigate("/")}
-                                className="btn btn-outline-secondary px-4"
-                                disabled={isSubmitting}
-                            >
+                        <div className="d-flex justify-content-end gap-3 mt-5">
+                            <button type="button" onClick={() => navigate("/")}
+                                className="btn btn-outline-secondary btn-lg px-4 border-0">
                                 Cancelar
                             </button>
-                            <button
-                                type="submit"
-                                className="btn btn-primary px-5"
-                                disabled={isSubmitting}
-                            >
+                            <button type="submit" disabled={isSubmitting}
+                                className="btn btn-dark btn-lg px-5 shadow">
                                 {isSubmitting ? (
-                                    <>
-                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                        Guardando...
-                                    </>
-                                ) : (
-                                    "Guardar Contacto"
-                                )}
+                                    <><span className="spinner-border spinner-border-sm me-2"></span>Enviando...</>
+                                ) : "Guardar Registro"}
                             </button>
                         </div>
                     </form>

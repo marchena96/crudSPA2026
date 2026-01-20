@@ -1,33 +1,38 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ToastContainer } from 'react-toastify'; // Trigger Toasts in the Form
-import 'react-toastify/dist/ReactToastify.css'; // Trigger Toasts in the Form 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"; // ¡Vital para evitar errores!
 import ContactList from "./components/ContactList";
 import ContactForm from "./components/ContactForm";
 
 function App() {
   return (
     <Router>
-      {/* 1. Añade el contenedor aquí para que las alertas sean visibles en toda la app */}
-      <ToastContainer position="top-right" autoClose={3000} />
+      {/* min-vh-100 asegura que la app ocupe todo el alto del navegador */}
+      <div className="min-vh-100 d-flex flex-column bg-light">
+        <ToastContainer theme="colored" position="top-right" autoClose={3000} />
 
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div className="container">
-          <a className="navbar-brand" href="/">CrudSPA</a>
-        </div>
-      </nav>
+        <nav className="navbar navbar-dark bg-dark shadow-sm py-3 px-4">
+          <div className="container-fluid">
+            <a className="navbar-brand fw-bold d-flex align-items-center fs-4" href="/">
+              <i className="bi bi-person-rolodex me-2"></i>
+              SISTEMA DE CONTACTOS 2026
+            </a>
+          </div>
+        </nav>
 
-      <main className="container">
-        <Routes>
-          {/* The "Index" page */}
-          <Route path="/" element={<ContactList />} />
+        {/* main flex-grow-1 estira el contenido para llenar la pantalla completa */}
+        <main className="flex-grow-1 container-fluid p-4">
+          <Routes>
+            <Route path="/" element={<ContactList />} />
+            <Route path="/create" element={<ContactForm />} />
+            <Route path="/edit/:id" element={<ContactForm />} />
+          </Routes>
+        </main>
 
-          {/* The "Create" page */}
-          <Route path="/create" element={<ContactForm />} />
-
-          {/* The "Edit" page with a parameter */}
-          <Route path="/edit/:id" element={<ContactForm />} />
-        </Routes>
-      </main>
+        <footer className="bg-white border-top py-3 text-center text-muted">
+          <small>Diseño Full-Width Responsivo &copy; 2026</small>
+        </footer>
+      </div>
     </Router>
   );
 }
