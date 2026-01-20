@@ -3,12 +3,13 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 // *. Add CORS services
-builder.Services.AddCors(options => // <--- ADD THIS
+// 1. Define the Policy
+builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:3000") // Common React ports
+            policy.WithOrigins("http://localhost:5173") // Your React URL
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
@@ -20,11 +21,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     builder.Configuration.GetConnectionString("DefaultConnection")
     ));
 
-
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
 var app = builder.Build();
+// 2. Enable the Policy (Must be placed between UseRouting and UseAuthorization)
+app.UseCors("AllowReactApp");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
