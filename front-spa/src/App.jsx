@@ -1,59 +1,30 @@
-import { useEffect, useState } from "react";
-import { getContacts, deleteContact } from "../services/contactService";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ContactList from "./components/ContactList";
+import ContactForm from "./components/ContactForm";
 
-function ContactList({ onEdit }) {
-  const [contacts, setContacts] = useState([]);
-
-  // Load data when component mounts
-  useEffect(() => {
-    loadContacts();
-  }, []);
-
-  const loadContacts = async () => {
-    const data = await getContacts();
-    setContacts(data);
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this contact?")) {
-      await deleteContact(id);
-      loadContacts(); // Refresh list after delete
-    }
-  };
-
+function App() {
   return (
-    <div className="container">
-      <h2>Contacts List</h2>
-      <button onClick={() => onEdit(null)} className="btn-primary">
-        Create New
-      </button>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {contacts.map((contact) => (
-            <tr key={contact.id}>
-              <td>{contact.name}</td>
-              <td>{contact.email}</td>
-              <td>{contact.phone}</td>
-              <td>
-                <button onClick={() => onEdit(contact)}>Edit</button>
-                <button onClick={() => handleDelete(contact.id)} style={{ marginLeft: "10px", color: "red" }}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Router>
+      <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div className="container">
+          <a className="navbar-brand" href="/">CrudSPA</a>
+        </div>
+      </nav>
+
+      <main className="container">
+        <Routes>
+          {/* The "Index" page */}
+          <Route path="/" element={<ContactList />} />
+
+          {/* The "Create" page */}
+          <Route path="/create" element={<ContactForm />} />
+
+          {/* The "Edit" page with a parameter */}
+          <Route path="/edit/:id" element={<ContactForm />} />
+        </Routes>
+      </main>
+    </Router>
   );
 }
 
-export default ContactList;
+export default App;
