@@ -7,6 +7,9 @@ import ContactForm from "./components/ContactForm";
 function App() {
   return (
     <Router>
+      {/* 1. Añade el contenedor aquí para que las alertas sean visibles en toda la app */}
+      <ToastContainer position="top-right" autoClose={3000} />
+
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div className="container">
           <a className="navbar-brand" href="/">CrudSPA</a>
